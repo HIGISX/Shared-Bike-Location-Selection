@@ -1,5 +1,5 @@
 # Shared-Bike-Location-Selection
-![Loading Model Overview]
+!
 ---
 
 In this project, we conducted data mining on Mobike bicycle trip data and various Points of Interest (POI) in Wuhan City, identifying the key influencing factors for shared bicycle travel.
