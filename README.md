@@ -1,5 +1,5 @@
 # Shared-Bike-Location-Selection
-![Work Flow](./assets/Work%20Flow.png)
+![Work Flow](./assets/Work%20Flow.jpg)
 
 ---
 
