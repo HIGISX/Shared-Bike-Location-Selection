@@ -1,0 +1,175 @@
+import pandas as pd
+import numpy as np
+import random
+import copy
+import time
+import matplotlib.pyplot as plt
+from matplotlib.patches import Circle
+
+class Chromosome:
+    def __init__(self, content):
+        self.content = content
+
+    def __str__(self):
+        return "%s" % self.content
+
+    def __repr__(self):
+        return "%s" % self.content
+
+class GeneticAlgorithm:
+    def __init__(self, n, m, cost_matrix, r, demand, convergence_threshold=0.01):
+        self.time = None
+        self.user_num = n
+        self.fac_num = m
+        self.r = r
+        self.cost_matrix = cost_matrix
+        self.demand = demand
+        self.iterations = 500
+        self.current_iteration = 0
+        self.generation_size = 25
+        self.reproduction_size = 10
+        self.mutation_prob = 0.3
+        self.top_chromosome = Chromosome([])
+        self.convergence_threshold = convergence_threshold
+
+    def mutation(self, chromosome):
+        mp = random.random()
+        if mp < self.mutation_prob:
+            i = random.randint(0, len(chromosome.content) - 1)
+            demand_points = [element for element in range(self.user_num) if element not in chromosome.content]
+            if demand_points:
+                chromosome.content[i] = random.choice(demand_points)
+        return chromosome
+
+    def crossover(self, parent1, parent2):
+        identical_elements = [element for element in parent1.content if element in parent2.content]
+        if len(identical_elements) == len(parent1.content):
+            return parent1, parent2
+        exchange_vector_for_parent1 = [element for element in parent1.content if element not in identical_elements]
+        exchange_vector_for_parent2 = [element for element in parent2.content if element not in identical_elements]
+
+        if len(exchange_vector_for_parent1) == 0 or len(exchange_vector_for_parent2) == 0:
+            return parent1, parent2
+
+        c = random.randint(0, min(len(exchange_vector_for_parent1), len(exchange_vector_for_parent2)) - 1)
+        for i in range(c):
+            exchange_vector_for_parent1[i], exchange_vector_for_parent2[i] = exchange_vector_for_parent2[i], \
+                exchange_vector_for_parent1[i]
+        child1 = Chromosome(identical_elements + exchange_vector_for_parent1)
+        child2 = Chromosome(identical_elements + exchange_vector_for_parent2)
+        return child1, child2
+
+    def fitness(self, chromosome):
+        chromosome_content = np.array(chromosome.content).astype(int)
+        dist_matrix = self.cost_matrix[chromosome_content]
+
+        covered = np.sum(dist_matrix <= self.r, axis=0)
+
+        covered_demand = np.sum(covered * self.demand)
+
+        return covered_demand
+
+    def initial_random_population(self):
+        init_population = []
+        candidate_points = list(range(self.user_num))
+        for k in range(self.generation_size):
+            rand_medians = random.sample(candidate_points, 500)
+            init_population.append(Chromosome(rand_medians))
+        return init_population
+
+    def selection(self, chromosomes):
+        chromosomes_with_fitness = [(chromosome, self.fitness(chromosome)) for chromosome in chromosomes]
+        chromosomes_with_fitness.sort(key=lambda x: x[1], reverse=True)
+        L = self.reproduction_size
+        selected_chromosomes = []
+        for i in range(self.reproduction_size):
+            j = L - np.floor((-1 + np.sqrt(1 + 4 * random.uniform(0, 1) * (L ** 2 + L))) / 2)
+            selected_chromosomes.append(chromosomes_with_fitness[int(j)][0])
+        return selected_chromosomes
+
+    def create_generation(self, for_reproduction):
+        new_generation = []
+        while len(new_generation) < self.generation_size:
+            parents = random.sample(for_reproduction, 2)
+            child1, child2 = self.crossover(parents[0], parents[1])
+            if child1 is not None:
+                self.mutation(child1)
+                new_generation.append(child1)
+            if child2 is not None and len(new_generation) < self.generation_size:
+                self.mutation(child2)
+                new_generation.append(child2)
+            print("Child1: %s, Fitness: %f" % (child1, self.fitness(child1)))
+            print("Child2: %s, Fitness: %f" % (child2, self.fitness(child2)))
+        return new_generation
+
+    def optimize(self):
+        start_time = time.time()
+        chromosomes = self.initial_random_population()
+        iteration_counter = 0
+        prev_top_fitness = 0
+        while iteration_counter < self.iterations:
+            for_reproduction = self.selection(chromosomes)
+            chromosomes = self.create_generation(for_reproduction)
+            iteration_counter += 1
+            chromosome_with_max_fitness = max(chromosomes, key=lambda chromo: self.fitness(chromo))
+            current_top_fitness = self.fitness(chromosome_with_max_fitness)
+            if self.top_chromosome.content == [] or current_top_fitness > self.fitness(
+                    self.top_chromosome):
+                self.top_chromosome = chromosome_with_max_fitness
+
+            print("Iteration %d/%d" % (iteration_counter, self.iterations))
+
+            if iteration_counter > 1:
+                fitness_difference = abs(current_top_fitness - prev_top_fitness)
+                if fitness_difference < self.convergence_threshold:
+                    print(f"Converged after {iteration_counter} iterations.")
+                    break
+
+            prev_top_fitness = current_top_fitness
+
+        end_time = time.time()
+        self.time = end_time - start_time
+        hours, rem = divmod(end_time - start_time, 3600)
+        minutes, seconds = divmod(rem, 60)
+        print()
+        print("Final top solution: %s" % self.top_chromosome)
+        print('Time: {:0>2}:{:0>2}:{:05.4f}'.format(int(hours), int(minutes), seconds))
+
+
+def display_points_with_mclp(users, facilities, centers, radius, demand):
+    ax = plt.gca()
+    plt.scatter(users[:, 0], users[:, 1], c='#949494', s=0.5, label='Users')
+    for i in centers:
+        plt.scatter(facilities[i][0], facilities[i][1], c='black', s=0.5, marker='*')
+        circle = Circle(xy=(facilities[i][0], facilities[i][1]), radius=radius, color='black', fill=False, lw=0.5)
+        ax.add_artist(circle)
+    plt.scatter(facilities[i][0], facilities[i][1], c='black', marker='*', s=1, label='Centers')
+
+if __name__ == '__main__':
+    csv_path = "C:\\Users\\29566\\Desktop\\共享单车论文\\数据分析\\最后版本选点_xyv.csv"
+    data = pd.read_csv(csv_path)
+
+    users = data[['location_x', 'location_y']].values
+    demand = data['需求强度'].values
+
+    distance = np.sum((users[:, np.newaxis, :] - users[np.newaxis, :, :]) ** 2, axis=-1) ** 0.5
+
+    radius = 0.006
+    n_users = len(users)
+    n_facilities = n_users
+    n_centers = 500
+    genetic = GeneticAlgorithm(n_users, n_facilities, distance, radius, demand)
+    genetic.optimize()
+
+    obj = genetic.fitness(genetic.top_chromosome)
+    centers = genetic.top_chromosome.content
+
+    print("The Set of centers are: %s" % centers)
+    print("The objective is: %s" % str(round(obj)))
+
+    fig = plt.figure(figsize=(10, 10))
+    name = 'MCLP (P=' + str(n_centers) + ',N=' + str(n_users) + ',M=' + str(n_facilities) + ')'
+    plt.title(name, font='Times New Roman', fontsize=18)
+    display_points_with_mclp(users, users, centers, radius, demand)
+    plt.legend(loc='best', prop='Times New Roman', fontsize=12)
+    plt.show()
