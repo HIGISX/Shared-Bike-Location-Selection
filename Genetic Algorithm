@@ -146,7 +146,7 @@ def display_points_with_mclp(users, facilities, centers, radius, demand):
     plt.scatter(facilities[i][0], facilities[i][1], c='black', marker='*', s=1, label='Centers')
 
 if __name__ == '__main__':
-    csv_path = "C:\\Users\\29566\\Desktop\\共享单车论文\\数据分析\\最后版本选点_xyv.csv"
+    csv_path = "C:\\Users\\29566\\Desktop\\Analysis\\location_selection_xyv.csv"
     data = pd.read_csv(csv_path)
 
     users = data[['location_x', 'location_y']].values
