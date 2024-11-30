@@ -1,4 +1,21 @@
 # Shared-Bike-Location-Selection
+
+This project is the code for the study: 
+
+Wang, S., Wang, R., Su, C., Zhou, L., Wang, W., & Liang, H. (2023, November). Optimization of shared bicycle location in Wuhan city based on multi-source geospatial big data. In Proceedings of the 2nd ACM SIGSPATIAL International Workshop on Spatial Big Data and AI for Industrial Applications (pp. 43-46).[[Full article]](https://dl.acm.org/doi/abs/10.1145/3615888.3627815)
+
+Paper reference:
+```bash
+@inproceedings{wang2023optimization,
+  title={Optimization of shared bicycle location in Wuhan city based on multi-source geospatial big data},
+  author={Wang, Shaohua and Wang, Runqiao and Su, Cheng and Zhou, Liang and Wang, Wenda and Liang, Haojian},
+  booktitle={Proceedings of the 2nd ACM SIGSPATIAL International Workshop on Spatial Big Data and AI for Industrial Applications},
+  pages={43--46},
+  year={2023}
+}
+```
+
+---
 ![Work Flow](./assets/Work%20Flow.jpg)
 
 ---
